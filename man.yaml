@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-counter
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: prometheus-counter
+  template:
+    metadata:
+      labels:
+        app: prometheus-counter
+    spec:
+      containers:
+      - name: prometheus-counter
+        image: docker.io/library/myapp:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: spacelift-prometheus-podmonitor
+  labels:
+    release: kube-prometheus-stack
+spec:
+  podMetricsEndpoints:
+    - port: "8080"
+      path: /metrics
+      interval: 15s
+  selector:
+    matchLabels:
+      app: prometheus-counter
+  namespaceSelector:
+    any: true
+  podTargetLabels:
+    - app
+---
+
